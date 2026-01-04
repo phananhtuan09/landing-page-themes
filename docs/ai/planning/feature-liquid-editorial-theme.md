@@ -1,162 +1,187 @@
-# Plan: Liquid Editorial Theme
+# Plan: Liquid Editorial Theme - Premium Animation Enhancement
 
 Note: All content in this document must be written in English.
 
 ## 0. Requirements Reference
 
-- **Requirement Doc**: [req-liquid-editorial-theme.md](../requirements/req-liquid-editorial-theme.md)
+- **Original Plan**: [archive/feature-liquid-editorial-theme_*.md](./archive/) (layout/UX fixes - mostly complete)
+- **Review Source**: "Landing Page Virtuoso" critique - transform from "boring 6.5/10" to "Awwwards-contender"
+- **Goal**: Add personality, premium interactions, and fluid dynamics while maintaining clean aesthetic
 
 ---
 
 ## 1. Codebase Context
 
-### Similar Features
-- `src/app/themes/theme1/page.tsx` - StartupX SaaS theme: clean structure, minimal design pattern
-- `src/app/themes/theme2/page.tsx` - CreativeStudio agency theme: bold gradients, dynamic layout
-- `src/app/themes/theme3/page.tsx` - LUXE luxury theme: elegant black/amber, premium aesthetic
+### Current State Analysis
 
-### Reusable Components/Utils
-- `src/components/ThemeSwitcher.tsx` - Dark mode toggle with hydration safety (exclude for this theme - no dark mode)
-- `src/components/ThemeProvider.tsx` - Wraps next-themes for light/dark (use for provider wrapper)
-- `src/components/index.ts` - Barrel export pattern for new components
+The layout/UX fixes from the previous plan are complete. The page now has:
+- Clean typography hierarchy with WCAG AA compliance
+- Standard grid layouts without overlapping
+- Subtle WebGL scroll distortion (reduced from original aggressive effect)
+- Proper accessibility with screen reader support
 
-### Architectural Patterns
-- **Page Structure**: Each theme is a standalone `page.tsx` in `src/app/themes/themeX/`
-- **Styling**: Pure Tailwind CSS classes, no CSS-in-JS
-- **Layout**: Fixed navbar → Hero → Sections → Footer pattern
-- **Responsive**: `sm:`, `md:`, `lg:` breakpoints with mobile-first approach
-- **Containers**: `max-w-7xl mx-auto px-4` standard container pattern
+**Current Animation Stack:**
+| Library | Version | Current Usage |
+|---------|---------|---------------|
+| Three.js | 0.169.0 | WebGL scroll distortion in `LiquidDistortion.ts` |
+| CSS | Native | Basic transitions (hover states, bounce animation) |
+| None | - | No split-text, no scroll triggers, no magnetic effects |
 
-### Key Files to Reference
-- `src/app/globals.css` - CSS variables and Tailwind imports (add theme-specific variables here)
-- `src/app/layout.tsx` - Font setup pattern (add Inter, Space Grotesk, Playfair Display)
-- `src/app/themes/theme1/page.tsx` - Reference for basic theme structure
+**What's Missing (from "Virtuoso" review):**
+- Character/word-level text animations (currently fade whole blocks)
+- Variable font interactions (reactive font weight on hover)
+- Accent text depth treatment (currently flat red color)
+- Staggered scroll-trigger animations
+- Magnetic hover with 3D tilt effects
+- Parallax depth in testimonials
+- Liquid reveal animations for CTA
 
-### WebGL Status
-- **No existing WebGL/Three.js** - Clean slate for implementation
-- Three.js must be added as a dependency
+### Files to Modify/Add
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/components/liquid-editorial/HeroSection.tsx` | MODIFIED | Split-text animation, accent shadow |
+| `src/components/liquid-editorial/FeaturesSection.tsx` | MODIFIED | Scroll stagger, magnetic hover, variable font |
+| `src/components/liquid-editorial/TestimonialsSection.tsx` | MODIFIED | Parallax scroll depths |
+| `src/components/liquid-editorial/CTASection.tsx` | MODIFIED | Liquid reveal, rotating icon |
+| `src/lib/animations/SplitText.tsx` | ADDED | Character/word split animation utility |
+| `src/lib/animations/useMagneticHover.ts` | ADDED | Magnetic cursor-follow with 3D tilt |
+| `src/lib/animations/useScrollTrigger.ts` | ADDED | Intersection Observer-based scroll triggers |
+| `src/lib/animations/useParallax.ts` | ADDED | Scroll-based parallax offsets |
+| `src/lib/animations/LiquidReveal.tsx` | ADDED | SVG mask liquid fill animation |
+| `src/app/globals.css` | MODIFIED | Variable font setup, accent shadow utility |
+| `package.json` | MODIFIED | Add Framer Motion dependency |
+
+### Reusable Patterns to Follow
+- CSS variables for theming (`--liquid-accent`, `--liquid-text`, etc.)
+- Component-based architecture with TypeScript interfaces
+- Three.js pattern from `LiquidDistortion.ts` for WebGL effects
+- Tailwind-style utility classes with custom CSS variables
 
 ---
 
 ## 2a. Design Specifications
 
-### Reference
-- **Source**: Requirement document specifications
-- **Style**: Brutalist Typography meets Fluid Dynamics
-- **Aesthetic**: Editorial magazine with broken grid layout
+### Animation Philosophy
 
-### Design Tokens
+**From Virtuoso Review:**
+> "A site with this name needs to feel alive, reactive, and organic. Currently, it feels like a well-designed PDF."
 
-**Colors**:
-- Background: #F9F7F2 (Honeyed neutral - warm off-white)
-- Text: #1C1C1C (Near-black for strong contrast)
-- Accent: #D9534F (International Orange - revealed during distortion)
+**Animation Principles:**
+1. **Entrance**: Staggered reveals, not block fades
+2. **Reactivity**: UI responds to user presence (hover, scroll)
+3. **Depth**: Break the 2D plane with parallax and shadows
+4. **Continuity**: Smooth, intentional motion with heavy easing
 
-**Typography**:
-- Headlines (Neo-Grotesque): Inter / Space Grotesk
-  - Hero H1: 50-80% viewport height (massive brutalist scale)
-  - Section H2: 4xl-6xl responsive
-  - Weight: 900 (Black) for headlines
-- Body (Display Serif): Playfair Display
-  - Base: 18px, weight 400
-  - Line height: 1.6-1.8 for readability
+### Motion Design Tokens
 
-**Spacing Scale**:
-- Extreme whitespace: Large section padding (py-32 to py-48)
-- Content breathing room: Generous margins between elements
-- Editorial framing: Wide gutters, asymmetric negative space
+**Easing Functions:**
+```css
+--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+--ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+```
 
-**Layout**:
-- Broken grid with intentional overlaps
-- Z-index layering for depth (no drop shadows)
-- Asymmetric element positioning
+**Duration Scale:**
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--duration-fast` | 200ms | Micro-interactions, hovers |
+| `--duration-normal` | 400ms | State changes, reveals |
+| `--duration-slow` | 800ms | Page transitions, hero animations |
+| `--duration-dramatic` | 1200ms | Split-text entrance, liquid reveals |
 
-### Component Breakdown
+**Stagger Delays:**
+- Character animation: 30-50ms per character
+- Word animation: 80-120ms per word
+- Grid items: 100-150ms per item (diagonal pattern)
 
-**Hero Section**:
-- Massive typography: 50-80vh headline size
-- Full-width WebGL canvas backdrop
-- Overlapping decorative elements
-- Subtle scroll indicator
+### Accent Text Treatment
 
-**Features Section**:
-- Broken grid layout (CSS Grid with manual positioning)
-- Overlapping cards/content blocks
-- Service/capability cards with hover states
-- Image + text combinations
+**Current:** Flat `color: var(--liquid-accent)` (#D9534F)
 
-**Testimonials Section**:
-- Quote cards with distortion effects
-- Large quotation marks as decorative elements
-- Client attribution with subtle styling
-- Asymmetric card placement
+**Enhanced:**
+```css
+.accent-text-elevated {
+  color: var(--liquid-accent);
+  text-shadow: 2px 2px 0px rgba(217, 83, 79, 0.3);
+  /* Subtle lift effect giving tactile, printed feel */
+}
+```
 
-**CTA Section**:
-- Prominent call-to-action
-- Accent color reveal on interaction
-- Editorial-style layout
-- Contact/conversion focus
+### Variable Font Specification
 
-### Responsive Specifications
+**If using Inter Variable (recommended):**
+- Default weight: 400
+- Hover weight: 550 (interpolated)
+- Transition: 200ms ease-out
 
-**Mobile (< 768px)**:
-- Static layout only (no WebGL distortion)
-- Single column layout
-- Reduced typography scale
-- CSS-only subtle hover effects
-- Touch-friendly tap targets
-
-**Tablet (768px - 1024px)**:
-- Transitional layout
-- 2-column grid where appropriate
-- Static or reduced effects based on capability
-
-**Desktop (> 1024px)**:
-- Full WebGL distortion effects
-- Broken grid layout
-- Maximum typography scale
-- All interactive features enabled
+**Fallback for non-variable fonts:**
+- Use `font-weight` transition (less smooth but functional)
 
 ---
 
 ## 3. Goal & Acceptance Criteria
 
 ### Goal
-Create an immersive "Liquid Editorial" landing page theme that combines brutalist typography with WebGL-powered fluid distortion effects. The page will feature velocity-based scroll distortion using Three.js and GLSL shaders, transforming static editorial content into a living, responsive canvas that showcases technical excellence and artistic vision.
+Transform the Liquid Editorial theme from a functional, static design (rated 6.5/10) into a premium, reactive experience worthy of Awwwards consideration. Add personality through sophisticated animations while maintaining the clean editorial aesthetic and accessibility standards already achieved.
 
 ### Acceptance Criteria (Given/When/Then)
 
-**AC1: Desktop Scroll Distortion**
-- Given a user on a WebGL-capable desktop browser
-- When the user scrolls down the page
-- Then all images, headlines, and decorative elements stretch/distort based on scroll velocity
-- And the #D9534F accent color is revealed during distortion
-- And the animation runs at 60 FPS
+**AC1: Split-Text Hero Animation**
+- Given a user lands on the page
+- When the hero section loads
+- Then the headline "FLUID DYNAMICS" animates character-by-character
+- And characters slide up from below with slight rotation
+- And they snap into place with heavy expo easing
+- And the animation completes within 1.2s
 
-**AC2: Scroll Stop Oscillation**
-- Given distorted elements during active scrolling
-- When the user stops scrolling
-- Then elements oscillate gently (gel-like effect)
-- And elements snap back to their rigid grid positions
+**AC2: Variable Font Hover Interaction**
+- Given a user viewing the Features/Capabilities grid
+- When they hover over a feature card title
+- Then the font weight smoothly increases from 400 to 550
+- And the transition feels "breathing" and reactive
+- And the effect reverses smoothly on mouse leave
 
-**AC3: Mobile Static Fallback**
-- Given a user on a mobile device
-- When the page loads
-- Then the static layout is displayed without WebGL distortion
-- And CSS-only subtle hover effects remain functional
+**AC3: Accent Text Depth**
+- Given a user viewing "DYNAMICS" or "FLOW" text
+- When rendered on screen
+- Then the text has a subtle colored drop shadow (2px 2px, 30% opacity)
+- And the effect gives a tactile, printed feel
+- And does not reduce readability
 
-**AC4: WebGL Not Supported**
-- Given a user on an older browser without WebGL support
-- When the page loads
-- Then WebGL detection fails gracefully
-- And static layout with CSS hover effects is displayed
-- And no JavaScript errors occur
+**AC4: Staggered Grid Scroll Reveal**
+- Given a user scrolling down to the Capabilities section
+- When the section enters the viewport
+- Then cards animate in with staggered timing (top-left first, bottom-right last)
+- And each card slides up with fade-in
+- And delay follows diagonal pattern (100-150ms between items)
 
-**AC5: Reduced Motion Preference**
-- Given a user with `prefers-reduced-motion: reduce` system setting
-- When the page loads
-- Then all distortion effects are disabled
-- And static editorial layout is displayed
+**AC5: Magnetic Hover with 3D Tilt**
+- Given a user hovering near a feature card
+- When their cursor is within proximity of the card
+- Then the card magnetically pulls slightly toward the cursor
+- And tilts subtly in 3D space (max 5-10 degrees)
+- And returns to neutral on mouse leave with spring easing
+
+**AC6: Testimonials Parallax Depth**
+- Given a user scrolling through the Voices section
+- When testimonial cards are visible
+- Then the middle card scrolls at a different speed than side cards
+- And the effect creates visual depth (breaking 2D plane)
+- And movement is subtle (parallax factor 0.1-0.2)
+
+**AC7: CTA Liquid Reveal Animation**
+- Given a user scrolling to the CTA section
+- When "FLOW" text enters viewport
+- Then it reveals with a liquid-fill SVG mask animation
+- And the effect looks like text filling with red liquid
+- And the infinity icon slowly rotates continuously
+
+**AC8: Performance & Accessibility**
+- Given the enhanced animations
+- When running on capable devices
+- Then frame rate maintains 60 FPS
+- And `prefers-reduced-motion` disables all non-essential animations
+- And all content remains accessible without animations
 
 ---
 
@@ -165,380 +190,267 @@ Create an immersive "Liquid Editorial" landing page theme that combines brutalis
 ### Risks
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
-| WebGL performance issues on mid-range GPUs | Medium | High | Implement adaptive quality settings, reduce mesh complexity |
-| DOM-to-Canvas sync lag causing visual jitter | Medium | Medium | Use RAF for sync, debounce position calculations |
-| Three.js bundle size impacting load time | Low | Medium | Dynamic import, code splitting for WebGL module |
-| GLSL shader compilation failures on some GPUs | Low | High | Test on multiple devices, provide shader fallbacks |
-| Text rendering quality in WebGL canvas | Medium | Medium | Use high-DPI canvas scaling, anti-aliasing |
+| Framer Motion bundle size impact | Medium | Medium | Use tree-shaking, lazy load animations |
+| Variable fonts not supported in all browsers | Low | Low | Graceful fallback to standard weight transition |
+| Complex animations causing jank on lower-end devices | Medium | High | Implement performance detection, reduce motion on slow devices |
+| Split-text breaking accessibility | Low | High | Preserve semantic HTML, test with screen readers |
+| Magnetic hover conflicting with touch devices | Medium | Low | Disable on touch devices (no hover intent) |
+| Too many animations becoming distracting | Medium | Medium | User testing, ensure animations enhance not distract |
 
 ### Assumptions
-- Users on desktop have modern browsers with WebGL 2.0 support
-- Mobile users expect fast loading over interactive effects
-- Three.js r150+ provides adequate performance for this use case
-- Free fonts (Inter, Space Grotesk, Playfair Display) are acceptable alternatives to paid fonts
-- Next.js 16 supports dynamic imports for Three.js without issues
-- Project uses Tailwind CSS for all styling (confirmed from codebase exploration)
+- Framer Motion is acceptable as a dependency (adds ~20-40kb gzipped)
+- Target browsers support CSS custom properties and modern transforms
+- Variable font (Inter Variable) can be loaded or fallback is acceptable
+- WebGL-capable devices are the primary target (existing Three.js usage)
+- The existing clean layout from previous plan phases will be preserved
 
 ---
 
 ## 5. Definition of Done
-- [ ] Build passes (linter, type checks, compile) with no errors
-- [ ] Theme page renders correctly at `/themes/liquid-editorial`
-- [ ] WebGL distortion works on desktop Chrome, Firefox, Safari, Edge
-- [ ] Mobile fallback displays static layout without errors
-- [ ] `prefers-reduced-motion` respected and disables effects
-- [ ] 60 FPS maintained during scroll on desktop
-- [ ] All sections implemented: Hero, Features, Testimonials, CTA
-- [ ] Typography uses specified fonts (Inter/Space Grotesk/Playfair)
-- [ ] Color palette matches specification (#F9F7F2, #1C1C1C, #D9534F)
-- [ ] Code follows existing project patterns and conventions
+
+- [ ] Build passes (linter, type checks, compile)
+- [ ] All 8 acceptance criteria demonstrated and verified
+- [ ] Animations respect `prefers-reduced-motion` media query
+- [ ] Frame rate maintains 60 FPS on modern devices
+- [ ] No layout shift (CLS) during animations
+- [ ] Bundle size increase documented (Framer Motion impact)
+- [ ] Touch devices have appropriate fallbacks (no magnetic hover)
+- [ ] Screen reader testing confirms no accessibility regression
+- [ ] Visual regression tests pass (if configured)
+- [ ] Code follows existing project patterns (TypeScript, CSS variables)
 
 ---
 
 ## 6. Implementation Plan
 
 ### Summary
-Build the Liquid Editorial Theme in 5 phases: (1) Foundation setup with fonts and colors, (2) Static layout components with broken grid, (3) WebGL distortion engine using Three.js, (4) DOM-to-Canvas synchronization for text/image rendering, (5) Polish with oscillation effects and accessibility. Each phase builds upon the previous, allowing for testing and validation at each step.
+Implement premium animations in 4 phases: (1) Install Framer Motion and create core animation utilities, (2) Implement Hero split-text and accent treatment, (3) Add Features grid animations (scroll trigger, magnetic hover, variable font), (4) Complete Testimonials parallax and CTA liquid reveal. Each phase is independently deployable.
 
 ---
 
-### Phase 1: Foundation Setup
+### Phase 1: Animation Infrastructure Setup
 
-**Goal**: Configure fonts, colors, and create the base theme page structure.
+**Goal:** Install dependencies and create reusable animation utilities.
 
-- [x] [MODIFIED] `package.json` — Add Three.js dependency
+- [x] [MODIFIED] `package.json` — Add Framer Motion dependency
   ```
   Pseudo-code:
-  - Add "three": "^0.169.0" to dependencies
-  - Add "@types/three": "^0.169.0" to devDependencies
-  - Run npm install to update lock file
+  - Add "framer-motion": "^11.15.0" to dependencies
+  - Run npm install to update lockfile
+  - Verify no peer dependency conflicts
   ```
+  **Done:** Installed framer-motion@11.15.0, added 3 packages, no vulnerabilities.
 
-- [x] [MODIFIED] `src/app/globals.css` — Add Liquid Editorial theme CSS variables
+- [x] [MODIFIED] `src/app/globals.css` — Add motion design tokens and accent shadow
   ```
   Pseudo-code:
-  - Add :root variables for theme colors:
-    --liquid-bg: #F9F7F2
-    --liquid-text: #1C1C1C
-    --liquid-accent: #D9534F
-  - Add font-face declarations or import statements if needed
-  - Keep existing theme variables intact
+  - Add CSS custom properties for easing functions:
+    --ease-out-expo, --ease-in-out-quart, --ease-spring
+  - Add duration tokens: --duration-fast/normal/slow/dramatic
+  - Add .accent-text-elevated class with text-shadow
+  - Add @media (prefers-reduced-motion: reduce) overrides
   ```
+  **Done:** Added easing functions, duration scale, .accent-text-elevated, .variable-font-hover, and reduced motion overrides.
 
-- [x] [MODIFIED] `src/app/layout.tsx` — Configure Google Fonts
+- [x] [ADDED] `src/lib/animations/useReducedMotion.ts` — Reduced motion preference hook
   ```
   Pseudo-code:
-  - Import Inter, Space_Grotesk, Playfair_Display from next/font/google
-  - Configure font subsets and weights:
-    - Inter: 400, 500, 700, 900
-    - Space_Grotesk: 700, 900
-    - Playfair_Display: 400, 500, 600
-  - Add CSS variables for fonts to html element
+  - Create hook using window.matchMedia('prefers-reduced-motion: reduce')
+  - Return boolean indicating if reduced motion is preferred
+  - Listen for preference changes
+  - Use as guard for all animation components
   ```
+  **Done:** Created hydration-safe hook using useSyncExternalStore pattern.
 
-- [x] [ADDED] `src/app/themes/liquid-editorial/page.tsx` — Create base theme page
+- [x] [ADDED] `src/lib/animations/useScrollTrigger.ts` — Intersection Observer scroll trigger
   ```
   Pseudo-code:
-  - Create page component with metadata export
-  - Add basic HTML structure: nav, main, sections, footer
-  - Apply theme background color and font classes
-  - Add placeholder content for all 4 sections
-  - Include Link to navigate back to theme gallery
+  - Accept ref, threshold, rootMargin options
+  - Use IntersectionObserver to detect when element enters viewport
+  - Return { isInView, hasAnimated } state
+  - Support once-only animation trigger
+  - Respect reduced motion preference
   ```
+  **Done:** Created with IntersectionObserver, triggerOnce support, and reduced motion awareness.
+
+- [x] [ADDED] `src/lib/animations/useMagneticHover.ts` — Magnetic cursor effect with 3D tilt
+  ```
+  Pseudo-code:
+  - Accept ref to target element
+  - Track mouse position relative to element center
+  - Calculate transform: translateX/Y (pull toward cursor)
+  - Calculate rotateX/Y based on cursor position (3D tilt)
+  - Apply transform with spring physics
+  - Return { style, handlers } for element
+  - Disable on touch devices and reduced motion
+  ```
+  **Done:** Created with perspective 3D, spring easing, touch device detection, and reduced motion support.
+
+- [x] [ADDED] `src/lib/animations/useParallax.ts` — Scroll-based parallax offset
+  ```
+  Pseudo-code:
+  - Accept speed factor (e.g., 0.1 = 10% of scroll speed)
+  - Track scroll position with requestAnimationFrame
+  - Calculate translateY offset based on element position and scroll
+  - Return transform style to apply
+  - Disable on reduced motion
+  ```
+  **Done:** Created with passive scroll listener, RAF optimization, and reduced motion support.
 
 ---
 
-### Phase 2: Static Layout & Components
+### Phase 2: Hero Section Enhancement
 
-**Goal**: Build the complete static layout with broken grid, massive typography, and all content sections.
+**Goal:** Implement split-text animation and accent treatment for maximum first impression.
 
-- [x] [ADDED] `src/components/liquid-editorial/HeroSection.tsx` — Hero with massive typography
+- [x] [ADDED] `src/lib/animations/SplitText.tsx` — Split text animation component
   ```
   Pseudo-code:
-  - Create full-viewport hero section
-  - Implement 50-80vh headline sizing with responsive scaling
-  - Use Space Grotesk for headline, Playfair for subtext
-  - Add overlapping decorative elements with absolute positioning
-  - Include subtle scroll indicator animation
-  - Apply extreme whitespace and editorial framing
+  - Accept children (text content), type ('chars' | 'words'), stagger delay
+  - Split text into spans preserving whitespace
+  - Animate each span with Framer Motion variants:
+    initial: { y: 20, opacity: 0, rotateX: -10 }
+    animate: { y: 0, opacity: 1, rotateX: 0 }
+  - Stagger children with configurable delay
+  - Use --ease-out-expo for heavy snapping effect
+  - Support aria-label on container for accessibility
   ```
+  **Done:** Created with Framer Motion, 3D perspective, screen reader support, and reduced motion fallback.
 
-- [x] [ADDED] `src/components/liquid-editorial/FeaturesSection.tsx` — Broken grid features
+- [x] [MODIFIED] `src/components/liquid-editorial/HeroSection.tsx` — Add split-text and accent styling
   ```
-  Pseudo-code:
-  - Implement CSS Grid with intentional overlap areas
-  - Create feature cards with asymmetric positioning
-  - Use z-index layering for depth effect (no shadows)
-  - Add service/capability descriptions
-  - Include image placeholders with proper aspect ratios
+  Pseudo-code (lines 6-23):
+  - Wrap "FLUID" in SplitText component (type='chars', stagger=40ms)
+  - Wrap "DYNAMICS" in SplitText with accent-text-elevated class
+  - Add animation delay between FLUID and DYNAMICS (0.4s)
+  - Keep aria-label on h1 for screen reader: "Fluid Dynamics"
+  - Add motion.div wrapper with initial={{ opacity: 0 }} for subtext
+  - Animate subtext in after headline completes (delay: 1.2s)
+  - Ensure scroll indicator only appears after all animations
   ```
-
-- [x] [ADDED] `src/components/liquid-editorial/TestimonialsSection.tsx` — Quote cards
-  ```
-  Pseudo-code:
-  - Create testimonial cards with large decorative quotes
-  - Implement broken grid for quote placement
-  - Add client name, role, and company attribution
-  - Style with editorial typography (Playfair for quotes)
-  - Prepare elements with data attributes for distortion targeting
-  ```
-
-- [x] [ADDED] `src/components/liquid-editorial/CTASection.tsx` — Conversion section
-  ```
-  Pseudo-code:
-  - Create prominent call-to-action layout
-  - Style CTA button with hover state (accent color hint)
-  - Add editorial-style supporting text
-  - Include contact/conversion elements
-  - Apply asymmetric layout with whitespace framing
-  ```
-
-- [x] [ADDED] `src/components/liquid-editorial/Navbar.tsx` — Fixed navigation
-  ```
-  Pseudo-code:
-  - Create fixed top navigation bar
-  - Add logo/brand mark
-  - Include navigation links (smooth scroll to sections)
-  - Style with theme colors and typography
-  - Implement backdrop blur effect
-  ```
-
-- [x] [ADDED] `src/components/liquid-editorial/Footer.tsx` — Editorial footer
-  ```
-  Pseudo-code:
-  - Create minimal editorial-style footer
-  - Add copyright and brand information
-  - Include social links or contact info
-  - Apply consistent typography and spacing
-  ```
-
-- [x] [MODIFIED] `src/components/index.ts` — Export new components
-  ```
-  Pseudo-code:
-  - Add barrel exports for all liquid-editorial components
-  - Group under liquid-editorial namespace if needed
-  ```
-
-- [x] [MODIFIED] `src/app/themes/liquid-editorial/page.tsx` — Integrate static components
-  ```
-  Pseudo-code:
-  - Import all section components
-  - Replace placeholder content with actual components
-  - Verify responsive layout at all breakpoints
-  - Add section IDs for smooth scroll navigation
-  ```
+  **Done:** Added SplitText for FLUID/DYNAMICS, accent-text-elevated class, motion.div for subtext and scroll indicator with staggered delays.
 
 ---
 
-### Phase 3: WebGL Distortion Engine
+### Phase 3: Features Grid Animations
 
-**Goal**: Create the Three.js-based distortion system with velocity-based vertex displacement.
+**Goal:** Make the Capabilities grid feel organic with scroll-triggered stagger, magnetic hover, and variable font.
 
-- [x] [ADDED] `src/lib/webgl/LiquidDistortion.ts` — Core WebGL class
+- [x] [MODIFIED] `src/app/globals.css` — Add variable font hover styles
   ```
   Pseudo-code:
-  - Create class extending Three.js renderer setup
-  - Initialize: Scene, OrthographicCamera, WebGLRenderer
-  - Create plane geometry with sufficient vertex density (100x100 segments)
-  - Implement resize handler for responsive canvas
-  - Add render loop with RAF and visibility check (pause when tab inactive)
-  - Export singleton or factory function
+  - Define .variable-font-hover class:
+    font-variation-settings: 'wght' 400;
+    transition: font-variation-settings 200ms var(--ease-out-expo);
+  - Add hover state: font-variation-settings: 'wght' 550
+  - Fallback for non-variable fonts: font-weight transition
   ```
+  **Done:** Already added in Phase 1 along with motion design tokens.
 
-- [x] [ADDED] `src/lib/webgl/shaders/distortion.vert` — Vertex shader (embedded in LiquidDistortion.ts)
+- [x] [MODIFIED] `src/components/liquid-editorial/FeaturesSection.tsx` — Add scroll stagger, magnetic hover
   ```
-  Pseudo-code:
-  - Receive uniforms: uTime, uScrollVelocity, uMouse (optional)
-  - Calculate vertex displacement based on:
-    - Scroll velocity (primary driver)
-    - Position on screen (wave pattern)
-    - Time for subtle animation
-  - Apply sinusoidal displacement: position.xy += sin(uv * frequency) * velocity
-  - Output displaced position to fragment shader
+  Pseudo-code (entire component refactor):
+  - Import useScrollTrigger, useMagneticHover, motion from framer-motion
+  - Wrap section in ref for scroll trigger detection
+  - Create staggered animation variants:
+    container: { staggerChildren: 0.12, delayChildren: 0.2 }
+    item: {
+      initial: { y: 30, opacity: 0 },
+      animate: { y: 0, opacity: 1, transition: { ease: 'easeOut' } }
+    }
+  - Calculate stagger order: diagonal pattern (top-left=0, bottom-right=last)
+    Order formula: row * 0.5 + col (creates diagonal flow)
+  - For each feature card:
+    - Wrap in motion.div with item variants
+    - Apply useMagneticHover for tilt effect (max 8deg rotation)
+    - Add variable-font-hover class to title
+  - Only trigger animation once (hasAnimated flag)
   ```
-
-- [x] [ADDED] `src/lib/webgl/shaders/distortion.frag` — Fragment shader (embedded in LiquidDistortion.ts)
-  ```
-  Pseudo-code:
-  - Receive uniforms: uTexture, uAccentColor, uDistortionAmount
-  - Sample texture at distorted UV coordinates
-  - Calculate distortion magnitude from displaced UVs
-  - Mix accent color (#D9534F) based on distortion intensity
-  - Output final color with accent reveal effect
-  ```
-
-- [x] [ADDED] `src/lib/webgl/ScrollVelocityTracker.ts` — Scroll velocity calculator
-  ```
-  Pseudo-code:
-  - Track scroll position over time using RAF
-  - Calculate velocity: (currentScroll - lastScroll) / deltaTime
-  - Apply smoothing/damping for fluid feel
-  - Detect scroll direction for directional distortion
-  - Export velocity as normalized value (-1 to 1)
-  - Implement oscillation decay when scroll stops
-  ```
-
-- [x] [ADDED] `src/hooks/useWebGLSupport.ts` — WebGL detection hook
-  ```
-  Pseudo-code:
-  - Create canvas element and get WebGL context
-  - Check for WebGL 2.0 support
-  - Check for prefers-reduced-motion preference
-  - Check for mobile/touch device
-  - Return { isSupported, prefersReducedMotion, isMobile }
-  ```
-
-- [x] [ADDED] `src/hooks/useScrollVelocity.ts` — React hook for scroll tracking
-  ```
-  Pseudo-code:
-  - Use useEffect to attach scroll listener
-  - Import and use ScrollVelocityTracker
-  - Provide velocity value via useState/useRef
-  - Clean up listener on unmount
-  - Memoize for performance
-  ```
+  **Done:** Added scroll-triggered stagger, FeatureCard component with magnetic hover, variable-font-hover on titles, diagonal order calculation.
 
 ---
 
-### Phase 4: DOM-to-Canvas Synchronization
+### Phase 4: Testimonials Parallax & CTA Finale
 
-**Goal**: Render DOM content (text, images) onto WebGL canvas while maintaining accessibility.
+**Goal:** Add depth to testimonials and create dramatic CTA reveal.
 
-- [x] [ADDED] `src/lib/webgl/DOMToTexture.ts` — DOM element to texture converter (simplified - overlay approach)
+- [ ] [MODIFIED] `src/components/liquid-editorial/TestimonialsSection.tsx` — Add parallax scrolling
+  ```
+  Pseudo-code (lines 40-50):
+  - Import useParallax hook
+  - Apply different parallax speeds to testimonial cards:
+    - First card (left): speed = 0.1 (slower)
+    - Second card (right): speed = -0.05 (counter, subtle)
+    - Third card (center): speed = 0.15 (faster, creates focal depth)
+  - Apply transform style from useParallax to each card wrapper
+  - Ensure cards have will-change: transform for performance
+  - Add scroll-triggered fade-in for initial reveal
+  ```
+
+- [ ] [ADDED] `src/lib/animations/LiquidReveal.tsx` — SVG liquid mask animation
   ```
   Pseudo-code:
-  - Query target DOM elements by selector/data attribute
-  - For each element:
-    - Get bounding rect and computed styles
-    - Create OffscreenCanvas at element dimensions
-    - Draw element content (text/image) to canvas
-    - Convert to Three.js Texture
-  - Cache textures for performance
-  - Implement update mechanism for dynamic content
+  - Create SVG clipPath with wavy edge (sine wave path)
+  - Animate wave moving upward (y position from 100% to 0%)
+  - Apply clipPath to children text
+  - Use Framer Motion for path animation
+  - Accept trigger (when to start), duration, waveAmplitude props
+  - Effect: text appears to fill with liquid from bottom
   ```
 
-- [x] [ADDED] `src/lib/webgl/TextRenderer.ts` — High-quality text rendering (simplified - overlay approach)
+- [ ] [MODIFIED] `src/components/liquid-editorial/CTASection.tsx` — Liquid reveal + rotating icon
+  ```
+  Pseudo-code (lines 13-24, 28-38):
+  - Import LiquidReveal, useScrollTrigger, motion
+  - Wrap "FLOW" text in LiquidReveal component
+    - Trigger on scroll into viewport
+    - Duration: 1.2s, waveAmplitude: 10
+    - Color: var(--liquid-accent)
+  - Replace static infinity symbol with motion.div:
+    animate: { rotate: 360 }
+    transition: { duration: 8, repeat: Infinity, ease: 'linear' }
+  - Add subtle scale pulse to icon:
+    scale: [1, 1.05, 1] over 4s, repeat
+  - Add scroll-triggered stagger for stats row (same as Features)
+  ```
+
+- [ ] [ADDED] `src/lib/animations/index.ts` — Export all animation utilities
   ```
   Pseudo-code:
-  - Create canvas with 2x pixel ratio for retina
-  - Configure font, size, weight from computed styles
-  - Render text with proper baseline and alignment
-  - Handle multi-line text with line height
-  - Apply anti-aliasing for smooth edges
-  - Return texture ready for Three.js
-  ```
-
-- [x] [ADDED] `src/components/liquid-editorial/WebGLCanvas.tsx` — Main canvas component
-  ```
-  Pseudo-code:
-  - Create full-page fixed canvas element
-  - Use useEffect to initialize LiquidDistortion
-  - Connect scroll velocity to shader uniforms
-  - Handle window resize events
-  - Implement conditional rendering based on useWebGLSupport
-  - Clean up WebGL resources on unmount
-  ```
-
-- [x] [ADDED] `src/components/liquid-editorial/DistortionTarget.tsx` — Wrapper component
-  ```
-  Pseudo-code:
-  - Wrap children with data attribute for targeting
-  - Register element position with WebGL system
-  - Handle visibility and intersection observer
-  - Provide ref to parent for position updates
-  - Apply CSS classes for static/hidden state switching
-  ```
-
-- [x] [MODIFIED] `src/app/themes/liquid-editorial/page.tsx` — Integrate WebGL
-  ```
-  Pseudo-code:
-  - Import WebGLCanvas and DistortionTarget
-  - Wrap distortable elements with DistortionTarget
-  - Add WebGLCanvas at page level (fixed behind content)
-  - Implement visibility CSS: DOM hidden when WebGL active
-  - Ensure fallback shows DOM content when WebGL disabled
-  ```
-
----
-
-### Phase 5: Polish & Accessibility
-
-**Goal**: Add oscillation effects, performance optimization, and ensure accessibility compliance.
-
-- [x] [MODIFIED] `src/lib/webgl/ScrollVelocityTracker.ts` — Add oscillation effect
-  ```
-  Pseudo-code:
-  - Detect when scroll stops (velocity near zero)
-  - Trigger oscillation animation:
-    - Use damped sine wave: amplitude * sin(frequency * t) * e^(-decay * t)
-    - Apply to distortion amount
-    - Duration: ~500-800ms
-  - Elements snap back to grid position as oscillation ends
-  ```
-
-- [x] [ADDED] `src/lib/webgl/PerformanceMonitor.ts` — FPS tracking and adaptation
-  ```
-  Pseudo-code:
-  - Track frame times using performance.now()
-  - Calculate rolling average FPS
-  - If FPS drops below 45, reduce quality:
-    - Decrease geometry complexity
-    - Lower texture resolution
-    - Simplify shader calculations
-  - Log performance metrics in development mode
-  ```
-
-- [x] [MODIFIED] `src/components/liquid-editorial/WebGLCanvas.tsx` — Add reduced motion support
-  ```
-  Pseudo-code:
-  - Check prefers-reduced-motion media query
-  - If reduced motion preferred:
-    - Skip WebGL initialization entirely
-    - Return null (show DOM fallback)
-  - Add aria-hidden="true" to canvas
-  - Ensure all content remains in accessible DOM
-  ```
-
-- [x] [ADDED] `src/components/liquid-editorial/StaticFallback.tsx` — CSS-only fallback
-  ```
-  Pseudo-code:
-  - Create wrapper component for non-WebGL state
-  - Add subtle CSS hover effects:
-    - Gentle scale on hover (transform: scale(1.02))
-    - Smooth opacity transitions
-    - Subtle shadow on focus
-  - Maintain editorial layout and typography
-  - Apply when: mobile, no WebGL, reduced motion
-  ```
-
-- [x] [MODIFIED] `src/app/themes/liquid-editorial/page.tsx` — Final integration
-  ```
-  Pseudo-code:
-  - Implement conditional rendering:
-    - If WebGL supported && desktop && !reducedMotion → show WebGLCanvas
-    - Else → show StaticFallback with visible DOM
-  - Add page metadata for SEO
-  - Verify all sections render correctly
-  - Test keyboard navigation and screen reader access
-  ```
-
-- [x] [MODIFIED] `src/app/page.tsx` — Add theme to gallery
-  ```
-  Pseudo-code:
-  - Add Liquid Editorial theme card to theme gallery
-  - Include preview image/thumbnail
-  - Add descriptive text: "Brutalist Typography + WebGL Distortion"
-  - Link to /themes/liquid-editorial
+  - Export SplitText from './SplitText'
+  - Export LiquidReveal from './LiquidReveal'
+  - Export useScrollTrigger from './useScrollTrigger'
+  - Export useMagneticHover from './useMagneticHover'
+  - Export useParallax from './useParallax'
+  - Export useReducedMotion from './useReducedMotion'
+  - Central import point for all animations
   ```
 
 ---
 
 ## 7. Follow-ups
 
-- [ ] Add unit tests for WebGL utility functions
-- [ ] Create Storybook stories for static components
-- [ ] Performance profiling on various GPU configurations
-- [ ] Consider adding mouse/cursor-based distortion (enhancement)
-- [ ] Explore adding page transition effects between sections
-- [ ] Create documentation for WebGL architecture decisions
-- [ ] Consider dark mode variant (marked as out of scope but could be future enhancement)
+- [ ] Consider adding mouse-reactive fluid ripples to Hero WebGL (from review: "fluid should gently ripple around cursor")
+- [ ] Add cursor trail or custom cursor effect for extra polish
+- [ ] Implement page transition animations between routes (if SPA navigation added)
+- [ ] Create Storybook stories for animation components
+- [ ] Add animation performance monitoring (track frame drops)
+- [ ] Consider OGL library as alternative to Three.js for fluid simulation (lighter weight)
+- [ ] A/B test animation intensity preferences with real users
+- [ ] Document animation system in project README
+
+---
+
+## Appendix: Virtuoso Review Mapping
+
+| Virtuoso Recommendation | Plan Phase | Component |
+|-------------------------|------------|-----------|
+| Split-text staggered reveal | Phase 2 | `SplitText.tsx` |
+| Variable font hover | Phase 3 | `FeaturesSection.tsx` + CSS |
+| Accent text drop shadow | Phase 2 | `globals.css` + `HeroSection.tsx` |
+| WebGL fluid with mouse reactive | Follow-up | (Future enhancement) |
+| Scroll-trigger stagger for grid | Phase 3 | `FeaturesSection.tsx` |
+| Magnetic hover with 3D tilt | Phase 3 | `useMagneticHover.ts` |
+| Testimonials parallax | Phase 4 | `TestimonialsSection.tsx` |
+| CTA liquid reveal | Phase 4 | `LiquidReveal.tsx` + `CTASection.tsx` |
+| Rotating infinity icon | Phase 4 | `CTASection.tsx` |

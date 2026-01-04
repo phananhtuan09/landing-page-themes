@@ -7,3 +7,7 @@ export { Footer } from "./Footer";
 export { WebGLCanvas } from "./WebGLCanvas";
 export { DistortionTarget } from "./DistortionTarget";
 export { StaticFallback, useIsStaticFallback } from "./StaticFallback";
+export { MagneticButton } from "./MagneticButton";
+export { ElevatorLink } from "./ElevatorLink";
+export { FillButton } from "./FillButton";
+export { GlowButton } from "./GlowButton";

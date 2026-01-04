@@ -1,161 +1,224 @@
+"use client";
+
+import { useRef, useState, useCallback } from "react";
+import { motion, Variants } from "framer-motion";
+
+import { useScrollTrigger } from "@/lib/animations/useScrollTrigger";
+import { useReducedMotion } from "@/lib/animations/useReducedMotion";
+
 const features = [
   {
     title: "Velocity Response",
     description:
       "Elements distort and stretch based on scroll velocity, creating a living, breathing canvas that reacts to your movement.",
-    gridArea: "1 / 1 / 2 / 2",
-    offset: "",
   },
   {
     title: "Elastic Recovery",
     description:
       "Watch as content oscillates and snaps back with gel-like elasticity when scrolling stops.",
-    gridArea: "1 / 2 / 2 / 3",
-    offset: "mt-12 lg:mt-24",
   },
   {
     title: "Accent Revelation",
     description:
       "Hidden colors emerge during motion, revealing depth and dimension beneath the surface.",
-    gridArea: "2 / 1 / 3 / 3",
-    offset: "-mt-8 lg:-mt-16",
   },
   {
     title: "Editorial Grid",
     description:
       "Intentionally broken layouts that challenge convention while maintaining perfect readability.",
-    gridArea: "2 / 3 / 3 / 4",
-    offset: "mt-8",
   },
   {
     title: "Performance First",
     description: "60 FPS guaranteed with adaptive quality that scales based on device capability.",
-    gridArea: "3 / 1 / 4 / 2",
-    offset: "-mt-4",
   },
   {
     title: "Accessible Design",
     description: "Respects reduced motion preferences and degrades gracefully for all users.",
-    gridArea: "3 / 2 / 4 / 4",
-    offset: "mt-16 lg:mt-20",
   },
 ];
 
-export function FeaturesSection() {
-  return (
-    <section id="features" className="py-32 lg:py-48 px-4 relative overflow-hidden">
-      {/* Decorative background element */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-4xl max-h-4xl opacity-[0.02] pointer-events-none"
-        style={{
-          border: "1px solid var(--liquid-text)",
-          borderRadius: "50%",
-        }}
-      />
+// Container variants for staggered children
+const containerVariants: Variants = {
+  hidden: { opacity: 1 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.2,
+    },
+  },
+};
 
-      <div className="max-w-7xl mx-auto relative">
-        {/* Section header with asymmetric layout */}
-        <div className="mb-20 lg:mb-32 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+// Item variants for individual cards
+const itemVariants: Variants = {
+  hidden: {
+    y: 30,
+    opacity: 0,
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1], // ease-out-expo
+    },
+  },
+};
+
+// Calculate diagonal stagger order (top-left first, bottom-right last)
+function getDiagonalOrder(index: number, columns: number): number {
+  const row = Math.floor(index / columns);
+  const col = index % columns;
+  return row * 0.5 + col;
+}
+
+interface FeatureCardProps {
+  feature: { title: string; description: string };
+  index: number;
+  diagonalOrder: number;
+}
+
+function FeatureCard({ feature, index, diagonalOrder }: FeatureCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+
+  // Spotlight effect state
+  const [spotlightPos, setSpotlightPos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (prefersReducedMotion || !cardRef.current) return;
+
+      const rect = cardRef.current.getBoundingClientRect();
+      setSpotlightPos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    },
+    [prefersReducedMotion]
+  );
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      variants={itemVariants}
+      custom={diagonalOrder}
+      className="group relative p-8 lg:p-10 rounded-sm overflow-hidden transition-[border-color] duration-300"
+      style={{
+        // Frosted glass effect
+        backgroundColor: "rgba(250, 249, 246, 0.5)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        // Subtle border that darkens on hover
+        border: `1px solid ${isHovered ? "rgba(28, 28, 28, 0.3)" : "rgba(28, 28, 28, 0.12)"}`,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Spotlight overlay - follows cursor */}
+      {!prefersReducedMotion && (
+        <div
+          className="pointer-events-none absolute -inset-px transition-opacity duration-300"
+          style={{
+            opacity: isHovered ? 1 : 0,
+            background: `radial-gradient(600px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(217, 83, 79, 0.08), transparent 40%)`,
+          }}
+        />
+      )}
+
+      {/* Index number - positioned top right with proper spacing */}
+      <motion.span
+        className="absolute top-6 right-6 font-mono text-xs tracking-wider transition-all duration-300 z-10"
+        style={{
+          fontFamily: "var(--font-inter)",
+          color: isHovered ? "var(--liquid-accent)" : "var(--liquid-text-tertiary)",
+        }}
+        animate={{
+          scale: isHovered ? 1.1 : 1,
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        0{index + 1}
+      </motion.span>
+
+      {/* Content container with proper spacing from number */}
+      <div className="relative z-10 pt-2">
+        <h3
+          className="text-xl lg:text-2xl font-bold mb-4 tracking-tight variable-font-hover"
+          style={{ fontFamily: "var(--font-space-grotesk)" }}
+        >
+          {feature.title}
+        </h3>
+        <p
+          className="text-base leading-relaxed"
+          style={{ fontFamily: "var(--font-playfair)", color: "var(--liquid-text-secondary)" }}
+        >
+          {feature.description}
+        </p>
+      </div>
+
+      {/* Removed: Red bottom border - replaced by spotlight effect */}
+    </motion.div>
+  );
+}
+
+export function FeaturesSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const { isInView } = useScrollTrigger(sectionRef, {
+    threshold: 0.1,
+    triggerOnce: true,
+  });
+
+  return (
+    <section id="features" className="py-24 lg:py-32 px-4 relative" ref={sectionRef}>
+      <div className="max-w-7xl mx-auto">
+        {/* Section header */}
+        <motion.div
+          className="mb-16 lg:mb-24 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h2
             className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-none"
             style={{ fontFamily: "var(--font-space-grotesk)" }}
           >
-            CAPA
-            <br className="hidden lg:block" />
-            BILITIES
+            CAPABILITIES
           </h2>
           <p
-            className="text-lg max-w-md opacity-60 lg:text-right leading-relaxed"
-            style={{ fontFamily: "var(--font-playfair)" }}
+            className="text-base max-w-md lg:text-right leading-relaxed"
+            style={{ fontFamily: "var(--font-playfair)", color: "var(--liquid-text-secondary)" }}
           >
             Crafted with precision. Powered by intention. Built for those who refuse to settle.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Broken grid layout */}
-        <div className="hidden lg:grid grid-cols-3 gap-6 lg:gap-8">
+        {/* Animated grid layout - 1 column mobile, 2 tablet, 3 desktop */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
           {features.map((feature, index) => (
-            <div
+            <FeatureCard
               key={index}
-              className={`group relative p-8 lg:p-10 border transition-all duration-300 hover:bg-[var(--liquid-text)] hover:text-[var(--liquid-bg)] ${feature.offset}`}
-              style={{
-                borderColor: "var(--liquid-text)",
-                gridArea: feature.gridArea,
-              }}
-            >
-              {/* Index number */}
-              <span
-                className="absolute top-4 right-4 text-xs opacity-30"
-                style={{ fontFamily: "var(--font-inter)" }}
-              >
-                0{index + 1}
-              </span>
-
-              <h3
-                className="text-xl lg:text-2xl font-bold mb-4 tracking-tight"
-                style={{ fontFamily: "var(--font-space-grotesk)" }}
-              >
-                {feature.title}
-              </h3>
-              <p
-                className="leading-relaxed opacity-70 group-hover:opacity-90"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                {feature.description}
-              </p>
-
-              {/* Hover accent line */}
-              <div
-                className="absolute bottom-0 left-0 w-0 h-1 transition-all duration-300 group-hover:w-full"
-                style={{ backgroundColor: "var(--liquid-accent)" }}
-              />
-            </div>
+              feature={feature}
+              index={index}
+              diagonalOrder={getDiagonalOrder(index, 3)}
+            />
           ))}
-        </div>
-
-        {/* Mobile/tablet single column layout */}
-        <div className="lg:hidden flex flex-col gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="group relative p-8 border transition-all duration-300 active:bg-[var(--liquid-text)] active:text-[var(--liquid-bg)]"
-              style={{ borderColor: "var(--liquid-text)" }}
-            >
-              <span
-                className="absolute top-4 right-4 text-xs opacity-30"
-                style={{ fontFamily: "var(--font-inter)" }}
-              >
-                0{index + 1}
-              </span>
-              <h3
-                className="text-xl font-bold mb-4 tracking-tight"
-                style={{ fontFamily: "var(--font-space-grotesk)" }}
-              >
-                {feature.title}
-              </h3>
-              <p
-                className="leading-relaxed opacity-70"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Decorative side text */}
-      <div
-        className="absolute bottom-32 -right-4 hidden xl:block opacity-5 pointer-events-none"
-        style={{
-          fontFamily: "var(--font-space-grotesk)",
-          fontSize: "12rem",
-          fontWeight: 900,
-          lineHeight: 0.7,
-          writingMode: "vertical-rl",
-        }}
-      >
-        FEAT
+        </motion.div>
       </div>
     </section>
   );

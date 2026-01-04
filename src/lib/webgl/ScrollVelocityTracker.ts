@@ -24,21 +24,27 @@ export class ScrollVelocityTracker {
   private oscillationFrequency: number;
   private oscillationDamping: number;
 
+  // Bound event handler for proper cleanup
+  private boundHandleScroll: () => void;
+
   constructor(config: ScrollVelocityTrackerConfig = {}) {
     this.smoothing = config.smoothing ?? 0.15;
-    this.decayRate = config.decayRate ?? 0.95;
+    this.decayRate = config.decayRate ?? 0.92; // Faster decay for quicker settle
     this.oscillationFrequency = config.oscillationFrequency ?? 8;
-    this.oscillationDamping = config.oscillationDamping ?? 5;
+    this.oscillationDamping = config.oscillationDamping ?? 8; // Faster oscillation decay
 
     this.lastScrollY = window.scrollY;
     this.lastTime = performance.now();
+
+    // Bind event handler once for proper cleanup
+    this.boundHandleScroll = this.handleScroll.bind(this);
 
     this.setupListeners();
     this.startLoop();
   }
 
   private setupListeners(): void {
-    window.addEventListener("scroll", this.handleScroll.bind(this), { passive: true });
+    window.addEventListener("scroll", this.boundHandleScroll, { passive: true });
   }
 
   private handleScroll(): void {
@@ -52,8 +58,8 @@ export class ScrollVelocityTracker {
       // Calculate raw velocity (pixels per second)
       const rawVelocity = deltaScroll / deltaTime;
 
-      // Normalize velocity to -1 to 1 range (with some headroom)
-      this.targetVelocity = Math.max(-1, Math.min(1, rawVelocity / 2000));
+      // Normalize velocity to -1 to 1 range (reduced sensitivity for gentler response)
+      this.targetVelocity = Math.max(-1, Math.min(1, rawVelocity / 3000));
     }
 
     this.lastScrollY = currentScrollY;
@@ -133,7 +139,7 @@ export class ScrollVelocityTracker {
   }
 
   public dispose(): void {
-    window.removeEventListener("scroll", this.handleScroll.bind(this));
+    window.removeEventListener("scroll", this.boundHandleScroll);
 
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);

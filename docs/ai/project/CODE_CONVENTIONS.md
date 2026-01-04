@@ -7,14 +7,15 @@ Edit manually as needed.
 
 ## Project Context
 
-| Property      | Value                                         |
-|---------------|-----------------------------------------------|
-| **Language**  | TypeScript 5                                  |
-| **Framework** | Next.js 16 (App Router) + React 19            |
-| **Styling**   | Tailwind CSS v4                               |
-| **Tooling**   | ESLint 9 + Prettier (integrated via plugin)   |
-| **Build**     | PostCSS with Tailwind                         |
-| **Path Alias**| `@/*` → `./src/*`                             |
+| Property       | Value                                         |
+|----------------|-----------------------------------------------|
+| **Language**   | TypeScript 5                                  |
+| **Framework**  | Next.js 16 (App Router) + React 19            |
+| **Styling**    | Tailwind CSS v4                               |
+| **Tooling**    | ESLint 9 + Prettier (integrated via plugin)   |
+| **Testing**    | Vitest + @testing-library/react               |
+| **Build**      | PostCSS with Tailwind                         |
+| **Path Alias** | `@/*` → `./src/*`                             |
 
 ---
 
@@ -30,20 +31,23 @@ Edit manually as needed.
 
 ### Variables & Functions
 - Use **camelCase** for all value-level identifiers
-- Examples: `setTheme`, `mounted`, `emptySubscribe`, `themes`
+- Examples: `velocityRef`, `setVelocity`, `handleResize`, `containerRef`, `emptySubscribe`
 
 ### Components & Types
 - Use **PascalCase** for React components, types, interfaces, and classes
-- Examples: `ThemeSwitcher`, `ThemeProvider`, `Metadata`
+- Examples: `HeroSection`, `WebGLCanvas`, `ThemeSwitcher`, `LiquidDistortion`
+- Type examples: `UseScrollVelocityResult`, `LiquidDistortionConfig`, `WebGLSupportResult`
 
 ### Constants
-- Use **camelCase** for local constants
+- Use **camelCase** for local constants and callbacks
 - Use **UPPER_SNAKE_CASE** for truly global/immutable configuration values
+- Examples: `navLinks`, `boundHandleScroll`, `scrollTimeoutRef`
 
 ### Files
-- Use **PascalCase** for component files (e.g., `ThemeSwitcher.tsx`)
-- Use **kebab-case** for route folders (e.g., `theme1/`, `theme2/`)
-- Use **camelCase** for utility files if added
+- Use **PascalCase** for component files (e.g., `ThemeSwitcher.tsx`, `HeroSection.tsx`)
+- Use **camelCase** for hook files (e.g., `useScrollVelocity.ts`, `useWebGLSupport.ts`)
+- Use **PascalCase** for utility classes (e.g., `LiquidDistortion.ts`, `ScrollVelocityTracker.ts`)
+- Use **kebab-case** for route folders (e.g., `liquid-editorial/`, `theme1/`)
 
 ### CSS Classes
 - Use Tailwind utility classes (kebab-case)
@@ -73,6 +77,7 @@ Edit manually as needed.
 ### Modules
 - Use ES Modules (`import`/`export`)
 - Prefer **named exports** over default exports for consistency
+- Use **barrel exports** via `index.ts` files for clean imports
 - Avoid `namespace`; use modules for encapsulation
 
 ### Configured Rules (from ESLint)
@@ -96,6 +101,7 @@ Edit manually as needed.
 - Declare all hook dependencies explicitly
 - Prefer stable callbacks with `useCallback` when passed to children
 - Memoize expensive computations with `useMemo` only when measured bottlenecks exist
+- Use `useSyncExternalStore` for hydration-safe external state (theme, WebGL support)
 
 ### State & Effects
 - Keep state minimal and serializable
@@ -127,19 +133,20 @@ Edit manually as needed.
 Observed pattern in this codebase:
 
 1. **Directives** — `"use client"` for client components
-2. **Framework imports** — Next.js, React
-3. **Third-party imports** — External libraries (e.g., `next-themes`)
-4. **Internal imports** — Using path alias `@/...`
-5. **CSS imports** — At the end (e.g., `"./globals.css"`)
+2. **Node/React imports** — React hooks, Next.js types
+3. **Third-party imports** — External libraries (e.g., `next-themes`, `three`)
+4. **Internal imports** — Using path alias `@/components`, `@/hooks`, `@/lib`
+5. **Type imports** — Interfaces/types within the imports
+6. **CSS imports** — At the end (e.g., `"./globals.css"`)
 
 **Example:**
 ```typescript
 "use client";
 
-import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 
-import { ThemeSwitcher } from "@/components";
+import { LiquidDistortion } from "@/lib/webgl/LiquidDistortion";
+import { useWebGLSupport, shouldEnableWebGL } from "@/hooks/useWebGLSupport";
 ```
 
 ---
@@ -151,6 +158,7 @@ import { ThemeSwitcher } from "@/components";
 - **Avoid Side Effects**: Functions should be predictable; don't modify external state
 - **Guard Clauses**: Prefer early returns to reduce nesting depth
 - **Max Nesting**: Avoid nesting beyond 2–3 levels; refactor into smaller functions
+- **Bound Event Handlers**: Bind class methods in constructor for cleanup (prevents memory leaks)
 
 ---
 
@@ -204,12 +212,30 @@ import { ThemeSwitcher } from "@/components";
 
 ## Testing
 
-- **Test Directory**: `__tests__/` at the source level
-- **Naming Pattern**: `*.test.tsx` or `*.spec.tsx`
-- **Testing Strategy**: Unit tests first; integration tests when needed
-- **Coverage**: Focus on critical paths and edge cases
+### Unit Tests
+- **Framework**: Vitest
+- **Run command**: `npm test` or `npx vitest run`
+- **Config file**: `vitest.config.ts`
+- **Test location**: `tests/unit/`
+- **File pattern**: `*.spec.ts` or `*.test.ts`
+- **Setup file**: `vitest.setup.ts`
 
-> Note: Testing infrastructure not yet configured in this project.
+### Integration Tests
+- **Framework**: Playwright (when needed)
+- **Run command**: `npx playwright test`
+- **Config file**: `playwright.config.ts`
+- **Test location**: `tests/integration/`
+- **File pattern**: `*.e2e.spec.ts`
+
+### Test Documentation
+- **Unit test docs**: `docs/ai/testing/unit-{name}.md`
+- **Integration test docs**: `docs/ai/testing/integration-{name}.md`
+
+### Testing Strategy
+- Unit tests first; integration tests when needed
+- Focus on critical paths and edge cases
+- Use `@testing-library/react` for component testing
+- Use `@testing-library/jest-dom` for DOM assertions
 
 ---
 
@@ -219,6 +245,7 @@ import { ThemeSwitcher } from "@/components";
 - After edits, run fast validation on changed files:
   - `npm run lint` (ESLint)
   - `npx tsc --noEmit` (Type check)
+  - `npm test` (Run tests)
   - Do NOT run Prettier manually (CI/tooling handles formatting)
 - Attempt auto-fixes up to 3 times (`npm run lint:fix`) before requesting help
 

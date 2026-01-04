@@ -1,106 +1,205 @@
+"use client";
+
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+
+import { SplitText, useMouseParallax, StrokeText } from "@/lib/animations";
+import { useReducedMotion } from "@/lib/animations/useReducedMotion";
+
 export function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+
+  // Animation timing constants
+  const dynamicsDelay = 0.6; // Delay after FLUID finishes (FLUID ~5 chars * 80ms = 0.4s)
+  const subtextDelay = 1.8; // After DYNAMICS animation
+  const scrollIndicatorDelay = 2.2;
+
+  // Mouse parallax for depth effect - FLUID moves slow, DYNAMICS moves opposite
+  const fluidParallax = useMouseParallax({ intensity: 0.015, smoothing: 0.08 });
+  const dynamicsParallax = useMouseParallax({
+    intensity: 0.025,
+    smoothing: 0.06,
+    inverted: true,
+  });
+
+  // Scroll-based text distortion (subtle wave effect)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Transform scroll progress to subtle skew for liquid feel
+  const textSkewX = useTransform(scrollYProgress, [0, 0.5], [0, -2]);
+  const textSkewY = useTransform(scrollYProgress, [0, 0.5], [0, 1]);
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
-      {/* Decorative overlapping elements */}
+    <section
+      ref={sectionRef}
+      className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden"
+    >
+      {/* Gradient mask at bottom - blends hero into content below */}
       <div
-        className="absolute top-1/4 -right-20 w-64 h-64 opacity-5 pointer-events-none"
+        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none z-20"
         style={{
-          backgroundColor: "var(--liquid-text)",
-          transform: "rotate(12deg)",
+          background:
+            "linear-gradient(to top, var(--liquid-bg) 0%, var(--liquid-bg) 20%, transparent 100%)",
         }}
-      />
-      <div
-        className="absolute bottom-1/4 -left-16 w-48 h-48 opacity-5 pointer-events-none"
-        style={{
-          backgroundColor: "var(--liquid-accent)",
-          transform: "rotate(-8deg)",
-        }}
+        aria-hidden="true"
       />
 
       <div className="max-w-7xl mx-auto w-full relative z-10">
-        {/* Massive brutalist headline */}
+        {/* Massive brutalist headline with parallax depth */}
         <h1
           className="font-black leading-[0.85] tracking-tighter"
           style={{
             fontFamily: "var(--font-space-grotesk)",
             fontSize: "clamp(4rem, 18vw, 14rem)",
           }}
+          aria-label="Fluid Dynamics"
         >
-          FLUID
+          {/* FLUID - Heavy solid text with block-settling animation */}
+          <motion.span
+            className="inline-block relative"
+            style={
+              prefersReducedMotion
+                ? {}
+                : {
+                    x: fluidParallax.x,
+                    y: fluidParallax.y,
+                    skewX: textSkewX,
+                  }
+            }
+          >
+            <SplitText
+              type="chars"
+              stagger={80}
+              duration={0.8}
+              animationStyle="heavy"
+            >
+              FLUID
+            </SplitText>
+          </motion.span>
+
           <br />
-          <span className="relative inline-block" style={{ color: "var(--liquid-accent)" }}>
-            DYNAMICS
-            {/* Decorative underline */}
-            <span
+
+          {/* DYNAMICS - Outline text with SVG stroke draw + opposite parallax */}
+          <motion.span
+            className="relative inline-block"
+            style={
+              prefersReducedMotion
+                ? {}
+                : {
+                    x: dynamicsParallax.x,
+                    y: dynamicsParallax.y,
+                    skewY: textSkewY,
+                  }
+            }
+          >
+            <StrokeText
+              delay={dynamicsDelay}
+              duration={1.2}
+            >
+              DYNAMICS
+            </StrokeText>
+
+            {/* Decorative underline - animated in after DYNAMICS */}
+            <motion.span
               className="absolute -bottom-2 left-0 w-full h-2 opacity-30"
               style={{ backgroundColor: "var(--liquid-accent)" }}
+              initial={{ scaleX: 0, originX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{
+                delay: dynamicsDelay + 1.2,
+                duration: 0.8,
+                ease: [0.16, 1, 0.3, 1],
+              }}
             />
-          </span>
+          </motion.span>
         </h1>
 
         {/* Editorial subtext with Playfair */}
-        <div className="mt-12 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+        <motion.div
+          className="mt-12 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: subtextDelay,
+            duration: 0.8,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+        >
           <p
-            className="text-lg md:text-xl leading-relaxed opacity-80"
-            style={{ fontFamily: "var(--font-playfair)" }}
+            className="text-lg md:text-xl leading-relaxed"
+            style={{
+              fontFamily: "var(--font-playfair)",
+              color: "var(--liquid-text-secondary)",
+            }}
           >
-            Where brutalist typography meets liquid motion. Experience editorial design that
-            breathes, flows, and responds to your every scroll.
+            Where brutalist typography meets liquid motion. Experience editorial
+            design that breathes, flows, and responds to your every scroll.
           </p>
           <div className="flex flex-col justify-end">
             <p
-              className="text-sm uppercase tracking-widest opacity-40"
-              style={{ fontFamily: "var(--font-inter)" }}
+              className="text-sm uppercase tracking-widest"
+              style={{
+                fontFamily: "var(--font-inter)",
+                color: "var(--liquid-text-tertiary)",
+              }}
             >
               Scroll-driven distortion
             </p>
             <p
-              className="text-sm uppercase tracking-widest opacity-40 mt-1"
-              style={{ fontFamily: "var(--font-inter)" }}
+              className="text-sm uppercase tracking-widest mt-1"
+              style={{
+                fontFamily: "var(--font-inter)",
+                color: "var(--liquid-text-tertiary)",
+              }}
             >
-              WebGL powered
+              Mouse-reactive parallax
             </p>
           </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-12 left-4 md:left-0 flex items-center gap-3 opacity-40">
-          <span
-            className="text-xs uppercase tracking-widest"
-            style={{ fontFamily: "var(--font-inter)" }}
-          >
-            Scroll to explore
-          </span>
-          <div className="w-px h-12 bg-current opacity-40" />
-          <svg
-            className="w-4 h-4 animate-bounce"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Asymmetric decorative text */}
-      <div
-        className="absolute bottom-24 right-8 hidden lg:block opacity-10 pointer-events-none"
-        style={{
-          fontFamily: "var(--font-space-grotesk)",
-          fontSize: "8rem",
-          fontWeight: 900,
-          lineHeight: 0.8,
-          writingMode: "vertical-rl",
+      {/* Scroll indicator - centered at bottom */}
+      <motion.div
+        className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-30"
+        style={{ color: "var(--liquid-text-secondary)" }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: scrollIndicatorDelay,
+          duration: 0.6,
+          ease: [0.16, 1, 0.3, 1],
         }}
       >
-        001
-      </div>
+        <span
+          className="text-xs uppercase tracking-widest"
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          Scroll to explore
+        </span>
+        <motion.svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          animate={{ y: [0, 6, 0] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+          />
+        </motion.svg>
+      </motion.div>
     </section>
   );
 }

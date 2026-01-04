@@ -22,9 +22,17 @@ export class LiquidDistortion {
   private container: HTMLElement;
   private clock: THREE.Clock;
 
+  // Bound event handlers for proper cleanup
+  private boundHandleResize: () => void;
+  private boundHandleVisibilityChange: () => void;
+
   constructor(config: LiquidDistortionConfig) {
     this.container = config.container;
     this.clock = new THREE.Clock();
+
+    // Bind event handlers once for proper cleanup
+    this.boundHandleResize = this.handleResize.bind(this);
+    this.boundHandleVisibilityChange = this.handleVisibilityChange.bind(this);
 
     // Scene setup
     this.scene = new THREE.Scene();
@@ -106,13 +114,13 @@ export class LiquidDistortion {
 
         vec3 pos = position;
 
-        // Velocity-based wave distortion
-        float frequency = 3.0;
-        float amplitude = uScrollVelocity * 0.15 * uDistortionStrength;
+        // Velocity-based wave distortion (subtle effect - reduced by 70%)
+        float frequency = 1.8;
+        float amplitude = uScrollVelocity * 0.04 * uDistortionStrength;
 
-        // Create wave pattern based on position and time
-        float wave1 = sin(pos.y * frequency + uTime * 2.0) * amplitude;
-        float wave2 = sin(pos.x * frequency * 0.5 + uTime * 1.5) * amplitude * 0.5;
+        // Create wave pattern based on position and time (slower animation)
+        float wave1 = sin(pos.y * frequency + uTime * 0.5) * amplitude;
+        float wave2 = sin(pos.x * frequency * 0.5 + uTime * 0.4) * amplitude * 0.5;
 
         // Apply displacement
         pos.x += wave1;
@@ -144,14 +152,14 @@ export class LiquidDistortion {
         float distortionIntensity = vDistortion * 10.0;
         distortionIntensity = clamp(distortionIntensity, 0.0, 1.0);
 
-        // Only show color during distortion
-        if (distortionIntensity > 0.05) {
+        // Only show color during distortion (increased threshold for less frequent rendering)
+        if (distortionIntensity > 0.1) {
           // Gradient based on UV position for visual interest
           float gradient = mix(0.3, 1.0, vUv.y);
 
-          // Accent color with distortion-based alpha
+          // Accent color with distortion-based alpha (reduced by 50%)
           vec3 color = uAccentColor * gradient;
-          alpha = distortionIntensity * 0.3;
+          alpha = distortionIntensity * 0.15;
 
           gl_FragColor = vec4(color, alpha);
         } else {
@@ -162,8 +170,8 @@ export class LiquidDistortion {
   }
 
   private setupEventListeners(): void {
-    window.addEventListener("resize", this.handleResize.bind(this));
-    document.addEventListener("visibilitychange", this.handleVisibilityChange.bind(this));
+    window.addEventListener("resize", this.boundHandleResize);
+    document.addEventListener("visibilitychange", this.boundHandleVisibilityChange);
   }
 
   private handleResize(): void {
@@ -214,8 +222,8 @@ export class LiquidDistortion {
       cancelAnimationFrame(this.animationId);
     }
 
-    window.removeEventListener("resize", this.handleResize.bind(this));
-    document.removeEventListener("visibilitychange", this.handleVisibilityChange.bind(this));
+    window.removeEventListener("resize", this.boundHandleResize);
+    document.removeEventListener("visibilitychange", this.boundHandleVisibilityChange);
 
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.ShaderMaterial).dispose();

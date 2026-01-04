@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import { MagneticButton } from "./MagneticButton";
+import { ElevatorLink } from "./ElevatorLink";
+
 const navLinks = [
   { href: "#features", label: "Features" },
   { href: "#testimonials", label: "Testimonials" },
@@ -39,33 +42,24 @@ export function Navbar() {
           {/* Center: Navigation links (desktop) */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm opacity-60 hover:opacity-100 transition-opacity relative group"
-                style={{ fontFamily: "var(--font-inter)" }}
-              >
-                {link.label}
-                <span
-                  className="absolute -bottom-1 left-0 w-0 h-px transition-all duration-300 group-hover:w-full"
-                  style={{ backgroundColor: "var(--liquid-accent)" }}
-                />
-              </a>
+              <ElevatorLink key={link.href} href={link.href} label={link.label} />
             ))}
           </div>
 
           {/* Right: CTA button + Mobile menu toggle */}
           <div className="flex items-center gap-4">
-            <button
+            <MagneticButton
               className="hidden sm:block px-6 py-2.5 text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 fontFamily: "var(--font-inter)",
                 backgroundColor: "var(--liquid-text)",
                 color: "var(--liquid-bg)",
               }}
+              maxPull={12}
+              radius={80}
             >
               Get Started
-            </button>
+            </MagneticButton>
 
             {/* Mobile menu button */}
             <button
